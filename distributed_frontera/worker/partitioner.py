@@ -11,7 +11,7 @@ class FingerprintPartitioner(Partitioner):
         digest = unhexlify(key[0:2] + key[5:7] + key[10:12] + key[15:17])
         value = unpack("<I", digest)
         idx = value[0] % size
-        return partitions[idx]
+        return self.partitions[idx]
 
 
 class Crc32NamePartitioner(Partitioner):
@@ -22,4 +22,4 @@ class Crc32NamePartitioner(Partitioner):
     def partition_by_hash(self, value, partitions):
         size = len(self.partitions)
         idx = value % size
-        return partitions[idx]
+        return self.partitions[idx]

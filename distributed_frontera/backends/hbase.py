@@ -279,12 +279,12 @@ class HBaseBackend(Backend):
         self.manager = manager
 
         settings = manager.settings
-        port = settings.get('HBASE_THRIFT_PORT', 9090)
-        hosts = settings.get('HBASE_THRIFT_HOST', 'localhost')
-        namespace = settings.get('HBASE_NAMESPACE', 'crawler')
-        drop_all_tables = settings.get('HBASE_DROP_ALL_TABLES', False)
-        self.queue_partitions = settings.get('HBASE_QUEUE_PARTITIONS', 4)
-        self._table_name = settings.get('HBASE_METADATA_TABLE', 'metadata')
+        port = settings.get('HBASE_THRIFT_PORT')
+        hosts = settings.get('HBASE_THRIFT_HOST')
+        namespace = settings.get('HBASE_NAMESPACE')
+        drop_all_tables = settings.get('HBASE_DROP_ALL_TABLES')
+        self.queue_partitions = settings.get('HBASE_QUEUE_PARTITIONS')
+        self._table_name = settings.get('HBASE_METADATA_TABLE')
         host = choice(hosts) if type(hosts) in [list, tuple] else hosts
 
         self.connection = Connection(host=host, port=int(port), table_prefix=namespace, table_prefix_separator=':')

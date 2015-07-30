@@ -94,16 +94,16 @@ class HBaseQueue(object):
         """
         Row - portion of the queue for each partition id created at some point in time
         Row Key - partition id + score interval + timestamp
-        Column Qualifier - discrete score (first two digits after dot, e.g. 0.01_0.02, 0.02_0.03, ...)
+        Column Qualifier - discrete score (first three digits after dot, e.g. 0.001_0.002, 0.002_0.003, ...)
         Value - QueueCell protobuf class
 
         Where score is mapped from 0.0 to 1.0
         score intervals are
-          [0.0-0.1)
-          [0.1-0.2)
-          [0.2-0.3)
+          [0.01-0.02)
+          [0.02-0.03)
+          [0.03-0.04)
          ...
-          [0.9-1.0]
+          [0.99-1.00]
         timestamp - the time when links was scheduled for retrieval.
 
         :param links:
@@ -225,9 +225,10 @@ class HBaseQueue(object):
 
 class HBaseState(object):
 
-    def __init__(self, connection, table_name):
+    def __init__(self, connection, table_name, logger):
         self.connection = connection
         self._table_name = table_name
+        self.logger = logger
         self._state_cache = {}
 
     def update(self, objs, persist):
@@ -254,13 +255,13 @@ class HBaseState(object):
                     hb_obj = prepare_hbase_object(state=state)
                     b.put(unhexlify(fprint), hb_obj)
         if force_clear:
-            print "Cache has %d items, clearing" % len(self._state_cache)
+            self.logger.debug("Cache has %d items, clearing" % len(self._state_cache))
             self._state_cache.clear()
 
     def fetch(self, fingerprints):
         to_fetch = [f for f in fingerprints if f not in self._state_cache]
-        print "to fetch %d from %d" % (len(to_fetch), len(fingerprints))
-        print "cache size %s" % len(self._state_cache)
+        self.logger.debug("cache size %s" % len(self._state_cache))
+        self.logger.debug("to fetch %d from %d" % (len(to_fetch), len(fingerprints)))
         for chunk in chunks(to_fetch, 65536):
             keys = [unhexlify(fprint) for fprint in chunk]
             table = self.connection.table(self._table_name)
@@ -290,7 +291,7 @@ class HBaseBackend(Backend):
         # protocol='compact', transport='framed'
         self.queue = HBaseQueue(self.connection, self.queue_partitions, self.manager.logger.backend,
                                 drop=drop_all_tables)
-        self.state_checker = HBaseState(self.connection, self._table_name)
+        self.state_checker = HBaseState(self.connection, self._table_name, self.manager.logger.backend)
 
 
         tables = set(self.connection.tables())

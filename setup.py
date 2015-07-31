@@ -36,5 +36,7 @@ setup(
         'python-snappy'
     ],
     extras_require={},
-    tests_require=[]
+    tests_require=[
+        'pytest>=2.6.4'
+    ]
 )

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import abstractmethod, abstractproperty, ABCMeta
 
-class StreamConsumer(object):
+class BaseStreamConsumer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -9,14 +9,14 @@ class StreamConsumer(object):
         pass
 
     @abstractmethod
-    def get(self):
+    def get_message(self, timeout=0.1, count=1):
         """
         :return: raw message
         """
         raise NotImplementedError
 
 
-class SpiderLogStream(object):
+class BaseSpiderLogStream(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -38,12 +38,12 @@ class SpiderLogStream(object):
         Messages consumed by all known groups can be freed
         :param partition_id: int
         :param group: consumer group
-        :return: StreamConsumer instance assigned to given partition_id
+        :return: BaseStreamConsumer instance assigned to given partition_id
         """
         raise NotImplementedError
 
 
-class UpdateScoreStream(object):
+class BaseUpdateScoreStream(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -61,7 +61,7 @@ class UpdateScoreStream(object):
         raise NotImplementedError
 
 
-class SpiderFeedStream(object):
+class BaseSpiderFeedStream(object):
     @abstractmethod
     def __init__(self, partitioner):
         pass
@@ -70,7 +70,7 @@ class SpiderFeedStream(object):
     def consumer(self, partition_id):
         """
         :param partition_id:
-        :return: StreamConsumer instance assigned to given partition_id
+        :return: BaseStreamConsumer instance assigned to given partition_id
         """
         raise NotImplementedError
 
@@ -91,7 +91,7 @@ class SpiderFeedStream(object):
         raise NotImplementedError
 
 
-class MessageBus(object):
+class BaseMessageBus(object):
     __metaclass__ = ABCMeta
 
     @abstractproperty

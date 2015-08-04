@@ -5,11 +5,7 @@ class BaseStreamConsumer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, partition_id):
-        pass
-
-    @abstractmethod
-    def get_message(self, timeout=0.1, count=1):
+    def get_messages(self, timeout=0.1, count=1):
         """
         :return: raw message
         """
@@ -62,10 +58,6 @@ class BaseUpdateScoreStream(object):
 
 
 class BaseSpiderFeedStream(object):
-    @abstractmethod
-    def __init__(self, partitioner):
-        pass
-
     @abstractmethod
     def consumer(self, partition_id):
         """

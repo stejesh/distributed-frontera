@@ -75,12 +75,12 @@ class HBaseQueue(object):
 
     GET_RETRIES = 1
 
-    def __init__(self, connection, partitions, logger, drop=False):
+    def __init__(self, connection, partitions, logger, table_name, drop=False):
         self.connection = connection
         self.partitions = [i for i in range(0, partitions)]
         self.partitioner = Crc32NamePartitioner(self.partitions)
         self.logger = logger
-        self.table_name = 'new_queue_msgpack'
+        self.table_name = table_name
 
         tables = set(self.connection.tables())
         if drop and self.table_name in tables:
@@ -94,16 +94,16 @@ class HBaseQueue(object):
         """
         Row - portion of the queue for each partition id created at some point in time
         Row Key - partition id + score interval + timestamp
-        Column Qualifier - discrete score (first two digits after dot, e.g. 0.01_0.02, 0.02_0.03, ...)
+        Column Qualifier - discrete score (first three digits after dot, e.g. 0.001_0.002, 0.002_0.003, ...)
         Value - QueueCell protobuf class
 
         Where score is mapped from 0.0 to 1.0
         score intervals are
-          [0.0-0.1)
-          [0.1-0.2)
-          [0.2-0.3)
+          [0.01-0.02)
+          [0.02-0.03)
+          [0.03-0.04)
          ...
-          [0.9-1.0]
+          [0.99-1.00]
         timestamp - the time when links was scheduled for retrieval.
 
         :param links:
@@ -225,10 +225,12 @@ class HBaseQueue(object):
 
 class HBaseState(object):
 
-    def __init__(self, connection, table_name):
+    def __init__(self, connection, table_name, logger, cache_size_limit):
         self.connection = connection
         self._table_name = table_name
+        self.logger = logger
         self._state_cache = {}
+        self._cache_size_limit = cache_size_limit
 
     def update(self, objs, persist):
         objs = objs if type(objs) in [list, tuple] else [objs]
@@ -245,7 +247,7 @@ class HBaseState(object):
         map(get, objs)
 
     def flush(self, force_clear):
-        if len(self._state_cache) > 3000000:
+        if len(self._state_cache) > self._cache_size_limit:
             force_clear = True
         table = self.connection.table(self._table_name)
         for chunk in chunks(self._state_cache.items(), 32768):
@@ -254,13 +256,13 @@ class HBaseState(object):
                     hb_obj = prepare_hbase_object(state=state)
                     b.put(unhexlify(fprint), hb_obj)
         if force_clear:
-            print "Cache has %d items, clearing" % len(self._state_cache)
+            self.logger.debug("Cache has %d items, clearing" % len(self._state_cache))
             self._state_cache.clear()
 
     def fetch(self, fingerprints):
         to_fetch = [f for f in fingerprints if f not in self._state_cache]
-        print "to fetch %d from %d" % (len(to_fetch), len(fingerprints))
-        print "cache size %s" % len(self._state_cache)
+        self.logger.debug("cache size %s" % len(self._state_cache))
+        self.logger.debug("to fetch %d from %d" % (len(to_fetch), len(fingerprints)))
         for chunk in chunks(to_fetch, 65536):
             keys = [unhexlify(fprint) for fprint in chunk]
             table = self.connection.table(self._table_name)
@@ -278,34 +280,46 @@ class HBaseBackend(Backend):
         self.manager = manager
 
         settings = manager.settings
-        port = settings.get('HBASE_THRIFT_PORT', 9090)
-        hosts = settings.get('HBASE_THRIFT_HOST', 'localhost')
-        namespace = settings.get('HBASE_NAMESPACE', 'crawler')
-        drop_all_tables = settings.get('HBASE_DROP_ALL_TABLES', False)
-        self.queue_partitions = settings.get('HBASE_QUEUE_PARTITIONS', 4)
-        self._table_name = settings.get('HBASE_METADATA_TABLE', 'metadata')
+        port = settings.get('HBASE_THRIFT_PORT')
+        hosts = settings.get('HBASE_THRIFT_HOST')
+        namespace = settings.get('HBASE_NAMESPACE')
+        drop_all_tables = settings.get('HBASE_DROP_ALL_TABLES')
+        self.queue_partitions = settings.get('HBASE_QUEUE_PARTITIONS')
+        self._table_name = settings.get('HBASE_METADATA_TABLE')
         host = choice(hosts) if type(hosts) in [list, tuple] else hosts
-
-        self.connection = Connection(host=host, port=int(port), table_prefix=namespace, table_prefix_separator=':')
-        # protocol='compact', transport='framed'
+        kwargs = {
+            'host': host,
+            'port': int(port),
+            'table_prefix': namespace,
+            'table_prefix_separator': ':'
+        }
+        if settings.get('HBASE_USE_COMPACT_PROTOCOL'):
+            kwargs.update({
+                'protocol': 'compact',
+                'transport': 'framed'
+            })
+        self.connection = Connection(**kwargs)
         self.queue = HBaseQueue(self.connection, self.queue_partitions, self.manager.logger.backend,
-                                drop=drop_all_tables)
-        self.state_checker = HBaseState(self.connection, self._table_name)
-
-
+                                settings.get('HBASE_QUEUE_TABLE'), drop=drop_all_tables)
+        self.state_checker = HBaseState(self.connection, self._table_name, self.manager.logger.backend,
+                                        settings.get('HBASE_STATE_CACHE_SIZE_LIMIT'))
         tables = set(self.connection.tables())
         if drop_all_tables and self._table_name in tables:
             self.connection.delete_table(self._table_name, disable=True)
             tables.remove(self._table_name)
 
         if self._table_name not in tables:
-            self.connection.create_table(self._table_name, {'m': {'max_versions': 5}, # 'compression': 'SNAPPY'
-                                                            's': {'max_versions': 1, 'block_cache_enabled': 1,
-                                                            'bloom_filter_type': 'ROW', 'in_memory': True, },
-                                                            'c': {'max_versions': 1}
-                                                            })
+            schema = {'m': {'max_versions': 1},
+                      's': {'max_versions': 1, 'block_cache_enabled': 1,
+                      'bloom_filter_type': 'ROW', 'in_memory': True, },
+                      'c': {'max_versions': 1}
+                     }
+            if settings.get('HBASE_USE_SNAPPY'):
+                schema['m']['compression'] = 'SNAPPY'
+            self.connection.create_table(self._table_name, schema)
         table = self.connection.table(self._table_name)
-        self.batch = table.batch(batch_size=9216)
+        self.batch = table.batch(batch_size=settings.get('HBASE_BATCH_SIZE'))
+        self.store_content = settings.get('HBASE_STORE_CONTENT')
 
     @classmethod
     def from_manager(cls, manager):
@@ -329,14 +343,12 @@ class HBaseBackend(Backend):
 
     def page_crawled(self, response, links):
         url, fingerprint, domain = self.manager.canonicalsolver.get_canonical_url(response)
-        obj = prepare_hbase_object(status_code=response.status_code, content=response.body)
-
+        obj = prepare_hbase_object(status_code=response.status_code, content=response.body) if self.store_content else \
+            prepare_hbase_object(status_code=response.status_code)
         links_dict = dict()
         for link in links:
             link_url, link_fingerprint, link_domain = self.manager.canonicalsolver.get_canonical_url(link)
             links_dict[unhexlify(link_fingerprint)] = (link, link_url, link_domain)
-
-
         self.batch.put(unhexlify(fingerprint), obj)
         for link_fingerprint, (link, link_url, link_domain) in links_dict.iteritems():
             obj = prepare_hbase_object(url=link_url,
@@ -363,7 +375,6 @@ class HBaseBackend(Backend):
                 continue
             results = self.queue.get(partition_id, max_next_requests,
                                                     min_hosts=24, max_requests_per_host=128)
-
             log.debug("Got %d items for partition id %d" % (len(results), partition_id))
             for fingerprint, url, score in results:
                 r = self.manager.request_model(url=url)
@@ -375,7 +386,6 @@ class HBaseBackend(Backend):
     def update_score(self, batch):
         if not isinstance(batch, dict):
             raise TypeError('batch should be dict with fingerprint as key, and float score as value')
-
         to_schedule = []
         for fprint, (score, url, schedule) in batch.iteritems():
             obj = prepare_hbase_object(score=score)

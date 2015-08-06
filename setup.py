@@ -33,7 +33,8 @@ setup(
         'happybase',
         'kafka-python',
         'msgpack-python',
-        'python-snappy'
+        'python-snappy',
+        'frontera'
     ],
     extras_require={},
     tests_require=[

@@ -19,7 +19,6 @@ Contents
     topics/overview
     topics/quickstart
     topics/full_scale_deployment
-    topics/tutorial
 
 Customizing
 -----------

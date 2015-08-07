@@ -4,6 +4,7 @@ from crawlfrontier.contrib.canonicalsolvers.basic import BasicCanonicalSolver
 from crawlfrontier.contrib.backends.hbase import _state
 from base import BaseCrawlingStrategy
 
+
 class CrawlingStrategy(BaseCrawlingStrategy):
     def __init__(self):
         self.canonicalsolver = BasicCanonicalSolver()

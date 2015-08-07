@@ -36,7 +36,7 @@ class ScoringWorker(object):
 
         self.consumer_batch_size = settings.get('CONSUMER_BATCH_SIZE', 128)
         self.outgoing_topic = settings.get('SCORING_TOPIC')
-        self.strategy = strategy_module.CrawlStrategy()
+        self.strategy = strategy_module.CrawlingStrategy()
         self.backend = self._manager.backend
         self.stats = {}
         self.cache_flush_counter = 0

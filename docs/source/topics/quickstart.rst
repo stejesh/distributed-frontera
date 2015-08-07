@@ -13,8 +13,7 @@ Here is what services needs to be installed and configured before running Fronte
 - Kafka,
 - HBase.
 
-These can be setup locally, no specific tuning is needed.
-
+These can be set up locally, no specific tuning is needed.
 Also you need to have installed Python 2.7+, Scrapy, Frontera and Distributed Frontera libraries.
 
 Frontera installation

@@ -1,12 +1,8 @@
-=============================
-Distributed Frontera tutorial
-=============================
+=====================
+Full scale deployment
+=====================
 
-Frontera can be set up in standalone and distributed manner. Allowing to distribute spiders, backend communication, and
-strategy workers. All the communication between components is done using `Kafka messaging system`_. Though,
-theoretically it should be possible to use other transport than Kafka, practically nothing is done in that direction.
-This tutorial is mainly written for Scrapy-based spiders, but nothing prevents to use any other fetching component not
-necessary written in Python.
+These are the topics you need to consider when deploying Distributed Frontera crawling in production system.
 
 1. Prerequisites
 ================
@@ -14,13 +10,9 @@ necessary written in Python.
 Here is what services needs to be installed and configured in order to run a distributed Frontera cluster:
 
 * Kafka,
-
 * HBase,
-
 * Scrapy,
-
-* DNS Service using some big DNS like OpenDNS or Verizon as upstream (if you're going to run a broad crawls).
-
+* DNS Service using massive DNS like OpenDNS or Verizon as upstream (if you're going to run a broad crawls).
 
 It is recommended to run spiders on a dedicated machines, they quite likely to consume lots of CPU and network
 bandwidth.
@@ -73,11 +65,14 @@ It's also a good practice to prevent spider from closing because of insufficienc
         spider.crawler.signals.connect(spider.spider_idle, signal=signals.spider_idle)
         return spider
 
+    def spider_idle(self):
+        self.log("Spider idle signal caught.")
+        raise DontCloseSpider
 
 3. Implement the crawling strategy
 ==================================
-Use ``distributed_frontera.worker.strategy.bfs`` module for reference. In general, you need to write a ``CrawlingStrategy``
-class with above interface::
+Use ``distributed_frontera.worker.strategy.bfs`` module for reference. In general, you need to write a
+``CrawlingStrategy`` class with above interface::
 
     class CrawlStrategy(object):
         def __init__(self):
@@ -98,7 +93,7 @@ class with above interface::
         def get_score(self, url):
             return 1.0
 
-All the incoming results from spiders will be passed thru this interface and for each URL the score should be
+All the incoming results from spiders will be passed through this interface and for each URL the score should be
 calculated and returned by method ``get_score``. Periodically ``finished()`` method is called to check if crawling goal
 is achieved. The strategy class instantiated in strategy worker, and can use it's own storage or any other kind of
 resources.
@@ -118,18 +113,18 @@ Three tasks it is doing in particular:
 
 * Read ``SCORING_TOPIC`` update DB with new score and schedule URL to download if needed.
 
-Strategy worker is reading ``INCOMING_TOPIC`` (Spider log), calculating score, deciding if URL needs to be crawled and pushes
-update_score events to ``SCORING_TOPIC``.
+Strategy worker is reading ``INCOMING_TOPIC`` (:term:`spider log`), calculating score, deciding if URL needs to be
+crawled and pushes update_score events to ``SCORING_TOPIC`` (:term:`scoring log`).
 
 Before setting it up you have to decide how many spider instances you need. One spider is able to download and parse
 about 700 pages/minute in average. Therefore if you want to fetch 1K per second you probably need about 10 spiders. For
-each 4 spiders you would need one pair of workers (strategy and DB). If your strategy worker is lightweight (not processing content for
-example) then 1 strategy worker per 15 spider instances could be enough.
+each 4 spiders you would need one pair of workers (strategy and DB). If your strategy worker is lightweight (not
+processing content for example) then 1 strategy worker per 15 spider instances could be enough.
 
-Your spider log (``INCOMING_TOPIC``) Kafka topic should have as much partitions as strategy workers you need. Each
-strategy worker is binded to specific partition using option ``SCORING_PARTITION_ID``.
+Your spider log (``INCOMING_TOPIC``) Kafka topic should have as much partitions as *strategy workers* you need. Each
+strategy worker is assigned to specific partition using option ``SCORING_PARTITION_ID``.
 
-Your outgoing topic, with new batches should have as much partitions as spiders you will have in your cluster.
+Your outgoing topic, with new batches should have as much partitions as *spiders* you will have in your cluster.
 
 Now, let's create a Frontera workers settings file under ``frontera`` subfolder and name it ``worker_settings.py``.::
 
@@ -145,7 +140,7 @@ Now, let's create a Frontera workers settings file under ``frontera`` subfolder 
     #--------------------------------------------------------
     # Url storage
     #--------------------------------------------------------
-    BACKEND = 'frontera.contrib.backends.hbase.HBaseBackend'
+    BACKEND = 'distributed_frontera.contrib.backends.hbase.HBaseBackend'
     HBASE_DROP_ALL_TABLES = False
     HBASE_THRIFT_PORT = 9090
     HBASE_THRIFT_HOST = 'localhost'
@@ -192,8 +187,8 @@ file according to partition ids assigned. E.g. ``settingsN.py``. ::
     # Crawl frontier backend
     #--------------------------------------------------------
     BACKEND = 'distributed_frontera.backends.remote.KafkaOverusedBackend'
-    KAFKA_LOCATION = 'localhost:9092'     # Your Kafka service location
-    SPIDER_PARTITION_ID = 0      # Partition ID assigned
+    KAFKA_LOCATION = 'localhost:9092'       # Your Kafka service location
+    SPIDER_PARTITION_ID = 0                 # Partition ID assigned
 
     #--------------------------------------------------------
     # Logging
@@ -207,27 +202,32 @@ file according to partition ids assigned. E.g. ``settingsN.py``. ::
 You should end up having as much settings files as your system spider instances will have. You can also store permanent
 options in common module, and import it's contents from each instance-specific config file.
 
+The same thing have to be done for strategy workers, each strategy worker should have it's own partition id
+(with ``SCORING_PARTITION_ID``) assigned in config files named ``strategyN.py``.
+
 6. Create Kafka topics
 ======================
 The main thing to do here is to set the number of partitions for ``OUTGOING_TOPIC`` equal to the number of spider
-instances. For other topics it makes sense to set more than one partition to better distribute the load across Kafka
-cluster.
+instances and for ``INCOMING_TOPIC`` equal to number of strategy worker instances. For other topics it makes sense to
+set more than one partition to better distribute the load across Kafka cluster.
 
 7. Start cluster
 ================
 
 First, let's start storage worker. It's recommended to dedicate one worker instance for new batches generation and
 others for the rest. Batch generation instance isn't much dependent on the count of spider instances, but saving
-to storage is.::
+to storage is. Here is how to run all in the same process::
 
-    # start the batch generation and DB saving instance
+    # start DB worker, enabling batch generation, DB saving and scoring log consumption
     $ python -m distributed_frontera.worker.main --config frontera.worker_settings
 
 
 Next, let's start strategy worker with sample strategy for crawling the internet in Breadth-first manner.::
 
-    $ python -m distributed_frontera.worker.score --config frontera.worker_settings --strategy
-        distributed_frontera.worker.strategy.bfs
+    $ python -m distributed_frontera.worker.score --config frontera.strategy0 --strategy distributed_frontera.worker.strategy.bfs
+    $ python -m distributed_frontera.worker.score --config frontera.strategy1 --strategy distributed_frontera.worker.strategy.bfs
+    ...
+    $ python -m distributed_frontera.worker.score --config frontera.strategyN --strategy distributed_frontera.worker.strategy.bfs
 
 You should notice that all processes are writing messages to the output. It's ok if nothing is written in Kafka topics,
 because of absence of seed URLs in the system.

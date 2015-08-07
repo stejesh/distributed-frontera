@@ -3,16 +3,48 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to distributed-frontera's documentation!
-================================================
+Distributed Frontera: Large-scale web crawling framework
+========================================================
 
-Contents:
+`Frontera`_ is a crawl frontier implementation of a `web crawler`_. It's managing when and what to crawl next, checking
+for crawling goal accomplishment. `Distributed Frontera`_ is extension to Frontera providing replication, sharding and
+isolation of all parts of Frontera-based crawler to scale and distribute it. Both these packages contain components to
+allow creation of fully-operational web crawler with Scrapy.
 
+Contents
+========
 .. toctree::
-   :hidden:
+    :maxdepth: 2
 
-:doc:`topics/tutorial`
-    How to run Frontera in distributed mode.
+    topics/overview
+    topics/quickstart
+    topics/full_scale_deployment
+
+
+..  Customizing
+    -----------
+    .. toctree::
+        :maxdepth: 2
+
+..      topics/customization/own_crawling_strategy
+        topics/customization/transferring_from_spider
+        topics/customization/communication
+        topics/customization/extending_sw
+
+..  Maintenance
+    -----------
+    .. toctree::
+        :maxdepth: 2
+
+..      topics/maintenance/settings
+        topics/maintenance/cluster-configuration
+        topics/maintenance/rebuilding_queue
+
+Miscellaneous
+-------------
+.. toctree::
+    topics/maintenance/settings
+    topics/glossary
 
 Indices and tables
 ==================
@@ -21,3 +53,6 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. _`Frontera`: http://github.com/scrapinghub/frontera
+.. _`web crawler`: https://en.wikipedia.org/wiki/Web_crawler
+.. _`Distributed Frontera`: https://github.com/scrapinghub/distributed-frontera

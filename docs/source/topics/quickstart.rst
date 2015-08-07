@@ -9,8 +9,9 @@ Here is a guide how to quickly setup Distributed Frontera for single-machine loc
 ================
 
 Here is what services needs to be installed and configured before running Frontera:
-* Kafka,
-* HBase.
+
+- Kafka,
+- HBase.
 
 These can be setup locally, no specific tuning is needed.
 

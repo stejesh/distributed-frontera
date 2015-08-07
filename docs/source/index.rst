@@ -6,10 +6,10 @@
 Distributed Frontera: Large-scale web crawling framework
 ========================================================
 
-`Frontera`_ is a crawl frontier implementation for a `web crawler`_. It's managing when and what to crawl next, checking
- for crawling goal achievement. `Distributed Frontera`_ is extension to Frontera allowing it to replicate, shard and
- isolate all the parts of Frontera-based crawler to solve large scale crawling problems. Both these packages contain
- components to allow creation of fully-operational web crawler with Scrapy.
+`Frontera`_ is a crawl frontier implementation of a `web crawler`_. It's managing when and what to crawl next, checking
+for crawling goal accomplishment. `Distributed Frontera`_ is extension to Frontera providing replication, sharding and
+isolation of all parts of Frontera-based crawler to scale and distribute it. Both these packages contain components to
+allow creation of fully-operational web crawler with Scrapy.
 
 Contents
 ========
@@ -51,7 +51,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* :doc:``
 
 .. _`Frontera`: http://github.com/scrapinghub/frontera
 .. _`web crawler`: https://en.wikipedia.org/wiki/Web_crawler

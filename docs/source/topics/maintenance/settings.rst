@@ -3,7 +3,7 @@ Settings
 ========
 
 Distributed Frontera uses the same settings mechanism as Frontera, redefines some of the default values and introduces
- new settings.
+new settings.
 
 .. _distributed-frontera-settings:
 

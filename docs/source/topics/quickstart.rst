@@ -3,10 +3,12 @@ Quickstart
 ==========
 
 Here is a guide how to quickly setup Distributed Frontera for single-machine local hacking. Please proceed to
-:doc:`full_scale_deployment` for a production setup details.
+:doc:`production` for a production setup details.
 
-1. Prerequisites
-================
+.. _basic_requirements:
+
+Prerequisites
+=============
 
 Here is what services needs to be installed and configured before running Frontera:
 
@@ -24,16 +26,16 @@ For Ubuntu, type in command line: ::
     $ pip install distributed-frontera
 
 
-2. Checkout a simple Scrapy spider
-==================================
+Checkout a simple Scrapy spider
+===============================
 This is a general spider, it does almost nothing except extracting links from downloaded content. Also contains lots
 of predefined options, please consult settings reference to get more information.
 ::
 
     $ git clone https://github.com/sibiryakov/general-spider.git
 
-6. Create Kafka topics
-======================
+Create Kafka topics
+===================
 General spider is configured for two spiders and two strategy workers. Therefore incoming and outcoming topic partitions
 should be set to 2.
 
@@ -43,8 +45,8 @@ should be set to 2.
     $ kafka-topics.sh --create --topic frontier-done --replication-factor 1 --partitions 2 --zookeeper localhost:2181
     $ kafka-topics.sh --create --topic frontier-score --replication-factor 1 --partitions 1 --zookeeper localhost:2181
 
-7. Start cluster
-================
+Start cluster
+=============
 
 First, let's start DB worker. ::
 

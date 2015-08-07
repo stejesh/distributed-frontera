@@ -3,6 +3,10 @@ python: 2.7
 env:
   - TOXENV=py27
   - TOXENV=flake8
+addons:
+  apt:
+    packages:
+      - libsnappy-dev
 install:
   - pip install -U tox wheel
 script: tox

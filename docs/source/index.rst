@@ -20,29 +20,30 @@ Contents
     topics/quickstart
     topics/full_scale_deployment
 
-Customizing
------------
-.. toctree::
-    :maxdepth: 2
 
-    topics/customization/own_crawling_strategy
-    topics/customization/transferring_from_spider
-    topics/customization/communication
-    topics/customization/extending_sw
+..  Customizing
+    -----------
+    .. toctree::
+        :maxdepth: 2
 
-Maintenance
------------
-.. toctree::
-    :maxdepth: 2
+..      topics/customization/own_crawling_strategy
+        topics/customization/transferring_from_spider
+        topics/customization/communication
+        topics/customization/extending_sw
 
-    topics/maintenance/settings
-    topics/maintenance/cluster-configuration
-    topics/maintenance/rebuilding_queue
+..  Maintenance
+    -----------
+    .. toctree::
+        :maxdepth: 2
+
+..      topics/maintenance/settings
+        topics/maintenance/cluster-configuration
+        topics/maintenance/rebuilding_queue
 
 Miscellaneous
 -------------
 .. toctree::
-
+    topics/maintenance/settings
     topics/glossary
 
 Indices and tables

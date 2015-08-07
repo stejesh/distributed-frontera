@@ -2,8 +2,9 @@
 from urlparse import urlparse
 from crawlfrontier.contrib.canonicalsolvers.basic import BasicCanonicalSolver
 from crawlfrontier.contrib.backends.hbase import _state
+from base import BaseCrawlingStrategy
 
-class CrawlStrategy(object):
+class CrawlingStrategy(BaseCrawlingStrategy):
     def __init__(self):
         self.canonicalsolver = BasicCanonicalSolver()
 
@@ -30,9 +31,6 @@ class CrawlStrategy(object):
         url, fingerprint, _ = self.canonicalsolver.get_canonical_url(request)
         request.meta['state'] = _state.get_id('ERROR')
         return {fingerprint: 0.0}
-
-    def finished(self):
-        return False
 
     def get_score(self, url):
         url_parts = urlparse(url)

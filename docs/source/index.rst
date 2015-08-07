@@ -15,7 +15,6 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    topics/use_cases
     topics/overview
     topics/quickstart
     topics/full_scale_deployment

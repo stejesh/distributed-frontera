@@ -10,13 +10,9 @@ These are the topics you need to consider when deploying Distributed Frontera cr
 Here is what services needs to be installed and configured in order to run a distributed Frontera cluster:
 
 * Kafka,
-
 * HBase,
-
 * Scrapy,
-
-* DNS Service using DNS like OpenDNS or Verizon as upstream (if you're going to run a broad crawls).
-
+* DNS Service using massive DNS like OpenDNS or Verizon as upstream (if you're going to run a broad crawls).
 
 It is recommended to run spiders on a dedicated machines, they quite likely to consume lots of CPU and network
 bandwidth.

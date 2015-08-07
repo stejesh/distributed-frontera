@@ -316,6 +316,7 @@ class HBaseBackend(Backend):
                      }
             if settings.get('HBASE_USE_SNAPPY'):
                 schema['m']['compression'] = 'SNAPPY'
+                schema['c']['compression'] = 'SNAPPY'
             self.connection.create_table(self._table_name, schema)
         table = self.connection.table(self._table_name)
         self.batch = table.batch(batch_size=settings.get('HBASE_BATCH_SIZE'))

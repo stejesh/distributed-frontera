@@ -3,29 +3,22 @@ Crawling strategy
 =================
 
 Use ``distributed_frontera.worker.strategy.bfs`` module for reference. In general, you need to write a
-``CrawlingStrategy`` class with above interface::
+``CrawlingStrategy`` class implementing the interface:
 
-    class CrawlStrategy(object):
-        def __init__(self):
-            pass
+.. autoclass:: distributed_frontera.worker.strategy.base.BaseCrawlingStrategy
 
-        def add_seeds(self, seeds):
-            pass
+    **Methods**
 
-        def page_crawled(self, response, links):
-            pass
+    .. automethod:: distributed_frontera.worker.strategy.base.BaseCrawlingStrategy.add_seeds
+    .. automethod:: distributed_frontera.worker.strategy.base.BaseCrawlingStrategy.page_crawled
+    .. automethod:: distributed_frontera.worker.strategy.base.BaseCrawlingStrategy.page_error
+    .. automethod:: distributed_frontera.worker.strategy.base.BaseCrawlingStrategy.finished
 
-        def page_error(self, request, error):
-            pass
 
-        def finished(self):
-            return False
+The class named ``CrawlingStrategy`` should put in a standalone module and passed to :term:`strategy worker` using
+command line option on startup.
 
-        def get_score(self, url):
-            return 1.0
-
-All the incoming results from spiders will be passed through this interface and for each URL the score should be
-calculated and returned by method ``get_score``. Periodically ``finished()`` method is called to check if crawling goal
-is achieved. The strategy class instantiated in strategy worker, and can use it's own storage or any other kind of
-resources.
+The strategy class instantiated in strategy worker, and can use it's own storage or any other kind of resources. All
+items from :term:`spider log` will be passed through these methods. Scores returned doesn't have to be the same as in
+method arguments. Periodically ``finished()`` method is called to check if crawling goal is achieved.
 

@@ -33,7 +33,6 @@ Here are some of the real world problems, where one can make use of Frontera:
 These are just an example set of tasks, Frontera is highly extensible, implemented in Python (which makes it easy to
 customize) and can be used for broad set of tasks related to large scale web crawling.
 
-
 Architecture
 ------------
 Overall system forms a closed circle and all the components are working as daemons in infinite cycles.
@@ -52,11 +51,11 @@ Where *sharded* means component consumes messages of assigned partition only, e.
 and *replicated* is when components consume topic regardless of partitioning.
 
 Such design allows to operate in real-time. Crawling strategy can be changed without having to stop the crawl. Also
-:doc:`crawling strategy <customization/own_crawling_strategy>` can be implemented as a separate module; containing logic for checking the crawling stopping
-condition, URL ordering, and scoring model.
+:doc:`crawling strategy <customization/own_crawling_strategy>` can be implemented as a separate module; containing logic
+for checking the crawling stopping condition, URL ordering, and scoring model.
 
-Distributed Frontera is polite to web hosts by design and each host is downloaded by no more than one spider process.
-This is achieved by Kafka topic partitioning. All Distributed Frontera components are written in Python.
+Frontera is polite to web hosts by design and each host is downloaded by no more than one spider process.
+This is achieved by Kafka topic partitioning.
 
 .. image:: images/frontera-design.png
 

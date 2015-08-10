@@ -8,7 +8,7 @@ class BaseCrawlingStrategy(object):
 
     Before calling these methods strategy worker is adding 'state' key to meta field in every
     :class:`Request <frontera.core.models.Request>` with state of the URL. Pleases refer for the states to HBaseBackend
-     implementation.
+    implementation.
 
     After exiting from all of these methods states from meta field are passed back and stored in the backend.
     """

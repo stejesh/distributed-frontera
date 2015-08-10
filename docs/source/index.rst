@@ -18,17 +18,18 @@ Contents
 
     topics/overview
     topics/quickstart
-    topics/full_scale_deployment
+    topics/production
 
 
-..  Customizing
-    -----------
-    .. toctree::
-        :maxdepth: 2
+Customizing
+-----------
+.. toctree::
+    :maxdepth: 2
 
-..      topics/customization/own_crawling_strategy
-        topics/customization/transferring_from_spider
-        topics/customization/communication
+    topics/customization/own_crawling_strategy
+    topics/customization/scrapy_spider
+
+..      topics/customization/communication
         topics/customization/extending_sw
 
 ..  Maintenance

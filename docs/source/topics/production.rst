@@ -82,8 +82,8 @@ Now, let's create a Frontera workers settings file under ``frontera`` subfolder 
 
 Configure Frontera spiders
 ==========================
-Next step is to create own file Frontera settings file for every spider instance. It is recommended to name settings
-file according to partition ids assigned. E.g. ``settingsN.py``. ::
+Next step is to create own file Frontera settings file for every spider instance. Often it's a good idea to name
+settings file according to partition ids assigned. E.g. ``settingsN.py``. ::
 
     from distributed_frontera.settings.default_settings import MIDDLEWARES
 

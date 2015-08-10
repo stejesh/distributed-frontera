@@ -2,7 +2,7 @@
 Quickstart
 ==========
 
-Here is a guide how to quickly setup Distributed Frontera for single-machine local hacking. Please proceed to
+Here is a guide how to quickly setup Frontera for single-machine, multiple process, local hacking. Please proceed to
 :doc:`production` for a production setup details.
 
 .. _basic_requirements:
@@ -16,7 +16,7 @@ Here is what services needs to be installed and configured before running Fronte
 - HBase.
 
 These can be set up locally, no specific tuning is needed.
-Also you need to have installed Python 2.7+, Scrapy, Frontera and Distributed Frontera libraries.
+Also you need to have installed Python 2.7+ and Scrapy library.
 
 Frontera installation
 ---------------------
@@ -53,7 +53,7 @@ First, let's start DB worker. ::
     $ python -m distributed_frontera.worker.main --config frontier.workersettings
 
 
-Next, let's start strategy worker with sample strategy for crawling the internet in Breadth-first manner.::
+Next, let's start strategy worker with default BFS (Breadth-First Strategy)::
 
     $ python -m distributed_frontera.worker.score --config frontier.strategy0 --strategy distributed_frontera.worker.strategy.bfs
     $ python -m distributed_frontera.worker.score --config frontier.strategy1 --strategy distributed_frontera.worker.strategy.bfs
@@ -73,5 +73,6 @@ Starting the spiders:::
 You should end up with 2 spider processes running. Each should read it's own Frontera config, and first one is using
 ``SEEDS_SOURCE`` variable to pass seeds to Frontera cluster.
 
-After some time seeds will pass the Kafka topics and get scheduled for downloading by workers. Crawler is bootstrapped.
-Now you can periodically check DB worker output or ``metadata`` table contents to see that there is actual activity.
+After some time seeds will pass the Kafka topics and get scheduled for downloading by workers. At this moment crawler
+is bootstrapped. Now you can periodically check DB worker output or ``metadata`` table contents to see that there is
+actual activity.

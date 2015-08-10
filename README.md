@@ -10,6 +10,7 @@ $ pip install distributed-frontera
 
 See http://distributed-frontera.readthedocs.org/
 
+EuroPython's presentation http://www.slideshare.net/sixtyone/fronteraopen-source-large-scale-web-crawling-framework
 
 ## Frontera
 
